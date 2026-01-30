@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -27,13 +28,12 @@
 
   <div id="app"></div>
 
-  <button id="calcBtn">Calculate Scores</button>
+  <button id="calcBtn" type="button">Calculate Scores</button>
   <div id="msg" class="warn"></div>
 
   <div id="results" class="results" style="display:none;"></div>
 
   <script>
-    // --- QUESTIONS (12 each) ---
     const DISC = {
       D: [
         "I take charge quickly in uncertain situations.",
@@ -93,14 +93,7 @@
       ]
     };
 
-    const SCALE = [
-      {v:1, label:"1"},
-      {v:2, label:"2"},
-      {v:3, label:"3"},
-      {v:4, label:"4"},
-      {v:5, label:"5"}
-    ];
-
+    const SCALE = [1,2,3,4,5];
     const app = document.getElementById("app");
 
     function render() {
@@ -110,7 +103,9 @@
         section.className = "section";
 
         const title = document.createElement("h2");
-        title.textContent = `${key} — ${key === "D" ? "Dominance" : key === "I" ? "Influence" : key === "S" ? "Steadiness" : "Conscientiousness"}`;
+        title.textContent =
+          key + " — " +
+          (key === "D" ? "Dominance" : key === "I" ? "Influence" : key === "S" ? "Steadiness" : "Conscientiousness");
         section.appendChild(title);
 
         qs.forEach((text, idx) => {
@@ -125,8 +120,8 @@
           const choices = document.createElement("div");
           choices.className = "choices";
 
-          SCALE.forEach(s => {
-            const id = `${key}_${idx}_${s.v}`;
+          SCALE.forEach(v => {
+            const id = `${key}_${idx}_${v}`;
             const label = document.createElement("label");
             label.setAttribute("for", id);
 
@@ -134,10 +129,10 @@
             input.type = "radio";
             input.name = `${key}_${idx}`;
             input.id = id;
-            input.value = String(s.v);
+            input.value = String(v);
 
             label.appendChild(input);
-            label.appendChild(document.createTextNode(` ${s.label}`));
+            label.appendChild(document.createTextNode(" " + v));
             choices.appendChild(label);
           });
 
@@ -156,8 +151,7 @@
 
       for (const [key, qs] of Object.entries(DISC)) {
         qs.forEach((_, idx) => {
-          const name = `${key}_${idx}`;
-          const chosen = document.querySelector(`input[name="${name}"]:checked`);
+          const chosen = document.querySelector(`input[name="${key}_${idx}"]:checked`);
           if (!chosen) missing.push(`${key}${idx+1}`);
           else totals[key] += Number(chosen.value);
         });
@@ -170,10 +164,7 @@
         return;
       }
 
-      const max = 12 * 5; // 60
-      const min = 12 * 1; // 12
-
-      // Determine primary + secondary
+      const max = 60, min = 12;
       const sorted = Object.entries(totals).sort((a,b)=>b[1]-a[1]);
       const primary = sorted[0][0];
       const secondary = sorted[1][0];
@@ -190,4 +181,14 @@
           <tr><td>S</td><td>${totals.S}</td></tr>
           <tr><td>C</td><td>${totals.C}</td></tr>
         </table>
-        <p><b>Primary style
+        <p><b>Primary style:</b> ${primary}</p>
+        <p><b>Secondary style:</b> ${secondary}</p>
+        <p><b>Profile:</b> ${primary}${secondary}</p>
+      `;
+    }
+
+    document.getElementById("calcBtn").addEventListener("click", calc);
+    render();
+  </script>
+</body>
+</html>
