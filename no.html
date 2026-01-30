@@ -1,0 +1,194 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DISC Leadership Assessment</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; line-height: 1.4; }
+    h1 { margin-bottom: 6px; }
+    .note { color: #333; margin-top: 0; }
+    .section { margin: 22px 0; padding-top: 8px; border-top: 1px solid #ddd; }
+    .q { margin: 14px 0; }
+    .q-title { margin-bottom: 6px; }
+    .choices label { margin-right: 10px; display: inline-block; }
+    button { padding: 10px 14px; font-size: 14px; }
+    .results { margin-top: 18px; padding: 12px; border: 1px solid #ddd; background: #fafafa; }
+    .warn { color: #b00020; }
+    table { border-collapse: collapse; margin-top: 8px; }
+    td, th { border: 1px solid #ddd; padding: 6px 10px; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>DISC Leadership Assessment</h1>
+  <p class="note">
+    Rate each statement from 1–5: 1 = Strongly Disagree • 2 = Disagree • 3 = Neutral • 4 = Agree • 5 = Strongly Agree
+  </p>
+
+  <div id="app"></div>
+
+  <button id="calcBtn" type="button">Calculate Scores</button>
+  <div id="msg" class="warn"></div>
+
+  <div id="results" class="results" style="display:none;"></div>
+
+  <script>
+    const DISC = {
+      D: [
+        "I take charge quickly in uncertain situations.",
+        "I make decisions confidently without over-consulting.",
+        "I push for results over comfort.",
+        "I confront problems directly.",
+        "I challenge weak performance.",
+        "I act fast when standards are not met.",
+        "I prioritize outcomes over harmony.",
+        "I set aggressive goals.",
+        "I push through resistance.",
+        "I dislike slow decision-making.",
+        "I take responsibility for outcomes.",
+        "I expect accountability."
+      ],
+      I: [
+        "I energize people around goals.",
+        "I communicate with enthusiasm.",
+        "I motivate through positivity.",
+        "I build excitement around ideas.",
+        "I enjoy persuading others.",
+        "I bring energy into rooms.",
+        "I connect easily with new people.",
+        "I inspire confidence.",
+        "I encourage group engagement.",
+        "I use optimism to move people.",
+        "I create emotional buy-in.",
+        "I rally people during challenges."
+      ],
+      S: [
+        "I remain calm under pressure.",
+        "I value stability and consistency.",
+        "I support others emotionally.",
+        "I am patient with people.",
+        "I build trust through reliability.",
+        "I prefer predictable environments.",
+        "I maintain steady performance.",
+        "I am dependable in routines.",
+        "I help others feel safe.",
+        "I avoid unnecessary conflict.",
+        "I am loyal to teams.",
+        "I value long-term relationships."
+      ],
+      C: [
+        "I focus on accuracy.",
+        "I follow rules carefully.",
+        "I value structure and systems.",
+        "I analyze before acting.",
+        "I prioritize quality.",
+        "I notice details others miss.",
+        "I prefer clear procedures.",
+        "I document processes.",
+        "I value consistency.",
+        "I seek correctness.",
+        "I minimize risk.",
+        "I follow standards precisely."
+      ]
+    };
+
+    const SCALE = [1,2,3,4,5];
+    const app = document.getElementById("app");
+
+    function render() {
+      app.innerHTML = "";
+      for (const [key, qs] of Object.entries(DISC)) {
+        const section = document.createElement("div");
+        section.className = "section";
+
+        const title = document.createElement("h2");
+        title.textContent =
+          key + " — " +
+          (key === "D" ? "Dominance" : key === "I" ? "Influence" : key === "S" ? "Steadiness" : "Conscientiousness");
+        section.appendChild(title);
+
+        qs.forEach((text, idx) => {
+          const qDiv = document.createElement("div");
+          qDiv.className = "q";
+
+          const p = document.createElement("div");
+          p.className = "q-title";
+          p.textContent = `${idx + 1}. ${text}`;
+          qDiv.appendChild(p);
+
+          const choices = document.createElement("div");
+          choices.className = "choices";
+
+          SCALE.forEach(v => {
+            const id = `${key}_${idx}_${v}`;
+            const label = document.createElement("label");
+            label.setAttribute("for", id);
+
+            const input = document.createElement("input");
+            input.type = "radio";
+            input.name = `${key}_${idx}`;
+            input.id = id;
+            input.value = String(v);
+
+            label.appendChild(input);
+            label.appendChild(document.createTextNode(" " + v));
+            choices.appendChild(label);
+          });
+
+          qDiv.appendChild(choices);
+          section.appendChild(qDiv);
+        });
+
+        app.appendChild(section);
+      }
+    }
+
+    function calc() {
+      document.getElementById("msg").textContent = "";
+      const totals = {D:0, I:0, S:0, C:0};
+      const missing = [];
+
+      for (const [key, qs] of Object.entries(DISC)) {
+        qs.forEach((_, idx) => {
+          const chosen = document.querySelector(`input[name="${key}_${idx}"]:checked`);
+          if (!chosen) missing.push(`${key}${idx+1}`);
+          else totals[key] += Number(chosen.value);
+        });
+      }
+
+      if (missing.length) {
+        document.getElementById("results").style.display = "none";
+        document.getElementById("msg").textContent =
+          `Please answer all questions. Missing: ${missing.slice(0, 18).join(", ")}${missing.length>18 ? "…" : ""}`;
+        return;
+      }
+
+      const max = 60, min = 12;
+      const sorted = Object.entries(totals).sort((a,b)=>b[1]-a[1]);
+      const primary = sorted[0][0];
+      const secondary = sorted[1][0];
+
+      const results = document.getElementById("results");
+      results.style.display = "block";
+      results.innerHTML = `
+        <h2>Results</h2>
+        <p><b>Score range per style:</b> ${min}–${max}</p>
+        <table>
+          <tr><th>Style</th><th>Total</th></tr>
+          <tr><td>D</td><td>${totals.D}</td></tr>
+          <tr><td>I</td><td>${totals.I}</td></tr>
+          <tr><td>S</td><td>${totals.S}</td></tr>
+          <tr><td>C</td><td>${totals.C}</td></tr>
+        </table>
+        <p><b>Primary style:</b> ${primary}</p>
+        <p><b>Secondary style:</b> ${secondary}</p>
+        <p><b>Profile:</b> ${primary}${secondary}</p>
+      `;
+    }
+
+    document.getElementById("calcBtn").addEventListener("click", calc);
+    render();
+  </script>
+</body>
+</html>
